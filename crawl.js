@@ -1,5 +1,32 @@
 const { JSDOM } = require ("jsdom");
 
+// function for crawling Page which takes url as the argument
+async function crawlPage(currentURL) {
+    console.log(`crawling :  ${currentURL}`)
+    try {
+        // fetch fnc
+        const res = await fetch(currentURL);
+        console.log(await res.text());
+
+        // if something goes wrong with the url or input url is not valid 
+        if (res.status > 399) {
+            console.log(`error in fetch with status code: ${res.status} on page ${currentURL}`)
+            return;
+        }
+        // if there is anything else than 'HTML' in the body of site  , , example : xml.
+        // to catch such situation and handling it 
+        const contentType = res.headers.get("content-type");
+        if (!contentType.includes("text/html")) {
+            console.log(`non html response, content type : ${contentType} on page ${currentURL}`);
+            return;
+        }
+
+    // if there is any error in fetching the url
+    } catch (err) {
+        console.log(`error in fetch: ${err.message}  ${currentURL}`)
+    }
+}
+
 // normalizeURL
 /*
 if multiple url points to the same website 
@@ -64,5 +91,5 @@ function getURLFromHTML(htmlBody,baseURL)
 module.exports = {
     normalizeURL,
     getURLFromHTML,
-
+    crawlPage,
 }
