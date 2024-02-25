@@ -2,7 +2,7 @@
 const { crawlPage } = require('./crawl.js');
 // using process method for performing operations.
 // argv is used to get the input from the command line.. . .
-function main() {
+async function main() {
     // edge case : if no website is provided as an input
     if(process.argv.length < 3) {
         console.log("no website provided");
@@ -16,7 +16,10 @@ function main() {
     // getting the base url line provided as the input
     const baseURL = process.argv[2];
     console.log(`starting crawler of  ${baseURL}`);
-    crawlPage(baseURL);
+    const pages  = await crawlPage(baseURL,baseURL,{});
+    for (const page of Object.entries(pages)) {
+       console.log(page) 
+    }
 }
 
 main();

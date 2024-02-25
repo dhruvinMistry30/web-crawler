@@ -1,30 +1,58 @@
 const { JSDOM } = require ("jsdom");
 
 // function for crawling Page which takes url as the argument
-async function crawlPage(currentURL) {
-    console.log(`crawling :  ${currentURL}`)
+async function crawlPage(baseURL,currentURL,pages) {
+    
+    // creating these baseURL's and currentURL's object to have URL function properties... .
+    
+    const baseURLObj = new URL(baseURL);
+    const currentURLObj = new URL(currentURL);
+    // if current url's domain is different than base url's domain , then return (current page)
+    if(baseURLObj.hostname !== currentURLObj.hostname) {
+        return pages;
+    }
+    // normalizing current url 
+    const normalizeCurrentURL = normalizeURL(currentURL);    
+
+    // if we have already visited the url(normalized url ) then increment it by ! and return pages .
+    if(pages[normalizeCurrentURL] > 0) {
+        pages[normalizeCurrentURL]++;
+        return pages;
+    }
+    // if this is the first time we are visit a particular url , then initialize it by 1 
+    // this is the entry point for our normalize current url
+    
+    pages[normalizeCurrentURL] = 1;
+    console.log(`actively crawling :  ${currentURL}`)
+    
     try {
         // fetch fnc
         const res = await fetch(currentURL);
-        console.log(await res.text());
-
+        
         // if something goes wrong with the url or input url is not valid 
         if (res.status > 399) {
             console.log(`error in fetch with status code: ${res.status} on page ${currentURL}`)
-            return;
+            return pages;
         }
         // if there is anything else than 'HTML' in the body of site  , , example : xml.
         // to catch such situation and handling it 
         const contentType = res.headers.get("content-type");
         if (!contentType.includes("text/html")) {
             console.log(`non html response, content type : ${contentType} on page ${currentURL}`);
-            return;
+            return pages;
         }
 
-    // if there is any error in fetching the url
+        const htmlBody = await res.text();
+        const nextURLs = getURLFromHTML(htmlBody,baseURL)
+
+        for (const nextURL of nextURLs) {
+            pages = await crawlPage(baseURL,nextURL,pages);
+        }  
+        // if there is any error in fetching the url
     } catch (err) {
-        console.log(`error in fetch: ${err.message}  ${currentURL}`)
+        console.log(`error in fetch: ${err.message},one page   ${currentURL}`)
     }
+    return pages
 }
 
 // normalizeURL
